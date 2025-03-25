@@ -1,376 +1,192 @@
 "use client"
 import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Toaster,toast } from "sonner"
-import { useEffect,useState } from "react"
-import axios from "axios"
+import { Toaster } from "sonner"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import SessionDetected from "./Auth/SessionDetected"
 import Image from "next/image"
 import HomePageSkl from "./skeleton/HomePageSkl"
 import useFcmToken from "../../hooks/useFcmToken"
-import Loader from "./Spinner/Loader"
 
 export default function Home() {
   const router = useRouter();
-  const { token, notificationPermissionStatus } = useFcmToken();
-const [data,setData] = useState(null);
-const [user,setUser] = useState(null);
-const [loading,setLoading] = useState(false);
-const [isansession,setisansession] = useState(false)
-const [assignment,setAssignment] = useState(3);
-const [project,setProject] = useState(3);
-const [allAssignment,setAllAssignment] = useState([]);
-//getting projects
-//getting submitted assignments
-const fetchAllSubmittedAssignment = async(pendata,id,uid)=>{
- 
-  const res = await fetch(`/api/submitassignment?crid=${id}&&userid=${uid}`,{
-    method:"GET",
-    headers:{
-      "Content-Type":"application/json",
-      "token":localStorage.getItem("dilmsadmintoken")
-    }
-  })
-  const data = await res.json()
-  setLoading(false)
-  if(data.success){
-// Check if data.data exists and filter submitted and evaluated items
-let submitted = data.data && data.data.filter((item) => item.status === "submitted");
-let evaluated = data.data && data.data.filter((item) => item.status === "evaluated");
+  const { token } = useFcmToken();
+  const [data, setData] = useState(null);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [isansession, setisansession] = useState(false);
 
-console.log('Submitted:', submitted);
-console.log('Evaluated:', evaluated);
+  const dashboardStats = [
+    { title: "Courses", value: data?.length || 0, icon: "📚" },
+    { title: "Assignments", value: 3, icon: "📋" },
+    { title: "Projects", value: 3, icon: "💼" },
+    { title: "Rank", value: "99+", icon: "🏆" }
+  ];
 
-// Filter only pending data using pendata
-let pending = pendata && pendata.filter((item) => {
-  let isSubmitted = submitted && submitted.find((item2) => item2.asid && item2.asid._id === item._id);
-  let isEvaluated = evaluated && evaluated.find((item2) => item2.asid && item2.asid._id === item._id);
-  return !isSubmitted && !isEvaluated;
-});
+  const sampleNotifications = [
+    { icon: "🔔", title: "New Course", text: "Cloud Computing course added." },
+    { icon: "📅", title: "Deadline", text: "Project proposal due July 26, 2024." },
+    { icon: "🏅", title: "Evaluation", text: "Project review on August 20th, 2024." }
+  ];
 
-console.log('Pending:', pending);
+  const sampleProjects = [
+    { title: "Capstone Project", progress: 25 },
+    { title: "Group Project", progress: 50 },
+    { title: "Individual Project", progress: 75 }
+  ];
 
-// Set assignment count and all assignments
-setAssignment(pending ? pending.length : 0);
-setAllAssignment(pending);
-
-
-    
-  }
-  else{
-    //
-  }
-}
-const fetchAllAssignment = async(id,uid)=>{
-  console.log("id is ",id)
-  const res = await fetch(`/api/assignment?id=${id}`,{
-    method:"GET",
-    headers:{
-      "Content-Type":"application/json",
-      "token":localStorage.getItem("dilmsadmintoken")
-    }
-  })
-  const data = await res.json()
-  if(data.success){
-    fetchAllSubmittedAssignment(data.data,id,uid)
-  }
-  else{
-    toast.error(data.message)
-    console.log(data)
-  }
-}
-//sending notification
-const SendNotification = async(id,title)=>{
-try{
-const res = await fetch("/api/notificationtoken",{
-  method:"POST",
-  headers:{
-    "Content-Type":"application/json",
-    "token":localStorage.getItem("dilmstoken")
-  },
- body:JSON.stringify({
-    crid:id,
-    token:token,
-    title:title
- })
-})
-let result  = await res.json();
-}
-catch(err){
-  console.log(err)
-}
-}
-//validating user with home auth
-const validatesFunc = async(token)=>{
-  console.log(token);
-  setLoading(true);
- const response = await fetch("/api/homeauth",{
-  method:"POST",
-  headers:{
-    "content-type":"application/json",
-    "token":token
-  }
- })
-const res = await response.json();
-  setLoading(false);
-console.log(res);
-if(res.success){
-setData(res.data);
-setUser(res.user)
-// fetchAllAssignment(res.data&&res.data[0].courseid._id,res.user._id);
-}
-else{
-toast.error(res.message);
-if(res.ansession){
-  setisansession(true);
- setTimeout(()=>{
-  router.push("/login");
- },1000)
-}
-  router.push("/login");
-}
-}
-  useEffect(()=>{
- validatesFunc(localStorage.getItem("dilmstoken"));
-  },[])
-  useEffect(()=>{
-    if(token!=null&&data!=null){
-      data&&data.map((item,index)=>{
-        SendNotification(item.courseid._id,item.courseid.title)
-      })
-    }
-  },[token,data])
   return (
     <>
-    <Toaster position="top-center" expand={false}/>
-    {loading&&<HomePageSkl/>}
-    {/* {loading && <Loader/>} Replace HomePageSkl with Loader */}
-    {isansession&&<SessionDetected/>}
-    {!loading&&!isansession&&<div className="flex flex-col w-full min-h-screen bg-background">
+      <Toaster position="top-center" expand={false} />
+      {loading && <HomePageSkl />}
+      {isansession && <SessionDetected />}
       
-      <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Courses</CardTitle>
-              <BookOpenIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{data&&data.length}</div>
-              <p className="text-xs text-muted-foreground">Enrolled</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Assignments</CardTitle>
-              <ClipboardIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{assignment}</div>
-              <p className="text-xs text-muted-foreground">Pending</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Projects</CardTitle>
-              <BriefcaseIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{project}</div>
-              <p className="text-xs text-muted-foreground">Ongoing</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Leaderboard</CardTitle>
-              <TrophyIcon className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{"99+"}</div>
-              <p className="text-xs text-muted-foreground">Rank</p>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Courses</CardTitle>
-              <Link href="/course" className="text-sm text-primary" prefetch={false}>
-                View All
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {data&&data.map((item,index)=>(<div className="flex items-center justify-between" key={index}>
-                  <div className="flex items-center gap-2">
-                    <Image src={item.courseid.img} width="40" height="40" className="rounded-lg" alt="Course Thumbnail" />
-                    <div>
-                      <div className="font-medium">{item.courseid.title}</div>
-                      <div className="text-xs text-muted-foreground">Completed: {item.progress}%</div>
-                    </div>
-                  </div>
-                  <Progress value={item.progress
-                  } className="w-20" />
-                </div>))}
-           
-            
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Assignments</CardTitle>
-              <Link href="/assignment" className="text-sm text-primary" prefetch={false}>
-                View All
-              </Link>
-            </CardHeader>
-            <CardContent>
-             <div className="grid gap-4">
-             { allAssignment&&allAssignment.slice(0,3).map((item,index)=>(<div className="flex items-center justify-between" key={index}>
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-muted p-2 text-2xl">
-                      <ClipboardIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-xs text-muted-foreground">Due: {new Date(item.duedate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                    </div>
-                  </div>
-                  <div className="text-xs text-muted-foreground">Pending</div>
-                </div>))}
-                </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Projects</CardTitle>
-              <Link href="/project" className="text-sm text-primary" prefetch={false}>
-                View All
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-muted p-2 text-2xl">
-                      <BriefcaseIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Capstone Project</div>
-                      <div className="text-xs text-muted-foreground">Completed: 0%</div>
-                    </div>
-                  </div>
-                  <Progress value={1} className="w-20" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-muted p-2 text-2xl">
-                      <BriefcaseIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Group Project</div>
-                      <div className="text-xs text-muted-foreground">Completed: 0%</div>
-                    </div>
-                  </div>
-                  <Progress value={1} className="w-20" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-muted p-2 text-2xl">
-                      <BriefcaseIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-medium">Individual Project</div>
-                      <div className="text-xs text-muted-foreground">Completed: 0%</div>
-                    </div>
-                  </div>
-                  <Progress value={1} className="w-20" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Leaderboard</CardTitle>
-            <Link href="#" className="text-sm text-primary" prefetch={false}>
-              View All
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="rounded-lg bg-muted p-2 text-2xl">
-                    <TrophyIcon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{user&&user.name}</div>
-                    <div className="text-xs text-muted-foreground">Overall Score: 92%</div>
-                  </div>
-                </div>
-                <div className="text-xs text-muted-foreground">Rank: 99+</div>
-              </div>
-           
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-            <Link href="#" className="text-sm text-primary" prefetch={false}>
-              View All
-            </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4">
-              <div className="flex items-start gap-2">
-                <div className="rounded-lg bg-muted p-2 text-2xl">
-                  <BellIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-medium">New Course Announcement</div>
-                  <div className="text-xs text-muted-foreground">
-                    A new course on Cloud Computing has been added to the curriculum.
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="rounded-lg bg-muted p-2 text-2xl">
-                  <CalendarIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-medium">Upcoming Deadline</div>
-                  <div className="text-xs text-muted-foreground">
-                    The final project proposal is due on July 26, 2024.
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2">
-                <div className="rounded-lg bg-muted p-2 text-2xl">
-                  <AwardIcon className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="font-medium">Project Evaluation</div>
-                  <div className="text-xs text-muted-foreground">
-                    The project evaluation is due on August 20th, 2024.
-                  </div>
-                </div>
-                <div />
+      {!loading && !isansession && (
+        <div className="min-h-screen bg-black text-white p-4 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
+              <div className="text-xs md:text-sm text-white/70">
+                Welcome, {user?.name || 'Guest'} • {new Date().toLocaleDateString()}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </main>
-    </div>}
+
+            {/* Dashboard Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {dashboardStats.map((stat, index) => (
+                <div 
+                  key={index} 
+                  className="bg-gray-950 rounded-xl p-3 border border-pink-600 hover:border-pink-500 transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-white/70 font-medium text-xs">{stat.title}</p>
+                      <p className="text-lg font-bold text-white mt-1">{stat.value}</p>
+                    </div>
+                    <span className="text-lg opacity-70">{stat.icon}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Main Content */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Courses Section */}
+              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-base font-semibold">Courses</h2>
+                  <Link href="/course" className="text-white/70 hover:text-white text-xs">
+                    View All
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {data?.slice(0, 3).map((item, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-gray-900 p-2 rounded-lg">
+                      <Image
+                        src={item.courseid.img}
+                        width={32}
+                        height={32}
+                        className="rounded-md"
+                        alt="Course Thumbnail"
+                      />
+                      <div className="flex-1">
+                        <p className="text-white font-medium text-xs truncate">{item.courseid.title}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <Progress value={item.progress} className="w-full h-1 bg-gray-800" />
+                          <span className="text-[10px] text-white/70">{item.progress}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assignments Section */}
+              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-base font-semibold">Assignments</h2>
+                  <Link href="/assignment" className="text-white/70 hover:text-white text-xs">
+                    View All
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {sampleProjects.slice(0, 3).map((item, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-900 p-2 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/70 text-base">📋</span>
+                        <div>
+                          <p className="text-white font-medium text-xs">{item.title}</p>
+                          <p className="text-[10px] text-white/50">
+                            Due: {new Date().toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-white bg-white/10 px-1.5 py-0.5 rounded-md">Pending</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Projects Section */}
+              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-base font-semibold">Projects</h2>
+                  <Link href="/project" className="text-white/70 hover:text-white text-xs">
+                    View All
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {sampleProjects.map((project, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-900 p-2 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/70 text-base">💼</span>
+                        <div className="flex-1">
+                          <p className="text-white font-medium text-xs">{project.title}</p>
+                          <div className="flex items-center gap-1 mt-1">
+                            <Progress value={project.progress} className="w-full h-1 bg-gray-800" />
+                            <span className="text-[10px] text-white/70">{project.progress}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notifications Section */}
+              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-base font-semibold">Notifications</h2>
+                  <Link href="#" className="text-white/70 hover:text-white text-xs">
+                    View All
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {sampleNotifications.map((notification, index) => (
+                    <div key={index} className="flex items-start gap-2 bg-gray-900 p-2 rounded-lg">
+                      <span className="text-base">{notification.icon}</span>
+                      <div>
+                        <p className="text-white font-medium text-xs">{notification.title}</p>
+                        <p className="text-[10px] text-white/70">{notification.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
+// ... (rest of the SVG icon components remain unchanged)
 
+// ... (rest of the SVG icon components remain unchanged)
+// ... (rest of the SVG icon components remain unchanged)
+// ... (rest of the SVG icon components remain unchanged)
 function AwardIcon(props) {
   return (
     <svg

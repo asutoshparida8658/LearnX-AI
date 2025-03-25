@@ -30,11 +30,13 @@ console.log(pathname);
           enableSystem
           disableTransitionOnChange
         >
-      {pathname === "/adminlogin" ? (
+   {pathname === "/adminlogin" ? (
   children
 ) : pathname.startsWith("/admin") ? (
   <AdminSidebar>{children}</AdminSidebar>
 ) : pathname === "/login" || pathname.startsWith("/course/detail") ? (
+  children
+) : pathname === "/register" ? (
   children
 ) : (
   // Optionally handle other paths if needed
