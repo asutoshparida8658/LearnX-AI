@@ -12,6 +12,8 @@ import SessionDetected from "./Auth/SessionDetected"
 import Image from "next/image"
 import HomePageSkl from "./skeleton/HomePageSkl"
 import useFcmToken from "../../hooks/useFcmToken"
+import Loader from "./Spinner/Loader"
+
 export default function Home() {
   const router = useRouter();
   const { token, notificationPermissionStatus } = useFcmToken();
@@ -146,6 +148,7 @@ if(res.ansession){
     <>
     <Toaster position="top-center" expand={false}/>
     {loading&&<HomePageSkl/>}
+    {/* {loading && <Loader/>} Replace HomePageSkl with Loader */}
     {isansession&&<SessionDetected/>}
     {!loading&&!isansession&&<div className="flex flex-col w-full min-h-screen bg-background">
       
