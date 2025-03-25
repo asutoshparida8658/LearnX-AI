@@ -34,7 +34,7 @@ export default function Component() {
   //fetch all course data
   const fethcourseData = async()=>{
     let res = await CourseData();
-    fetchVideoData(res.data[0]._id)
+    fetchVideoData(res.data[0]._id[any])
     setCourseDatas(res.data)
   }
   //fetch all video data

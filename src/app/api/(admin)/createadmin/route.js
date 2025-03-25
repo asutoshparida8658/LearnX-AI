@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
+import ConnectDb from "../../../../../middleware/db";
 import Admin from "../../../../../models/Admin";
 import { headers } from "next/headers";
 import bcrypt from "bcryptjs";
 
 export const POST = async (req) => {
   try {
-    // Check if already connected
-    if (mongoose.connection.readyState === 1) {
-      console.log("Using existing MongoDB connection");
-    } else {
-      // Connect to MongoDB
-      await mongoose.connect(process.env.MONGO_URL);
-      console.log("Connected to MongoDB");
-    }
+    await ConnectDb();
     
     // Get request data
     const reqData = await req.json();
-    const { username, name, password, email, linkedin, github, role} = reqData;
+    const { username, name, password, email, linkedin, github, role, masterKey } = reqData;
 
+    // Validate master key for security
+    if (masterKey !== process.env.ADMIN_MASTER_KEY) {
+      return NextResponse.json({
+        success: false,
+        message: "Unauthorized: Invalid master key",
+        status: 401
+      });
+    }
 
     // Check if username already exists
     const existingUsername = await Admin.findOne({ username });
