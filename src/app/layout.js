@@ -10,6 +10,8 @@ import Chat from "@/utilities/Ai/Chat";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import Head from "next/head";
+import { ThemeProvider } from "@/components/ui/theme-provide";
+import { ThemeProvider as NextThemesProvider } from "next-themes"
 
 export default function RootLayout({ children }) {
   const [aiopen, setaiopen] = useState(false);
@@ -22,6 +24,12 @@ console.log(pathname);
       color="#FF0000"
       showSpinner={false}
       />
+      <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
       {pathname === "/adminlogin" ? (
   children
 ) : pathname.startsWith("/admin") ? (
@@ -42,7 +50,7 @@ console.log(pathname);
     <Chat aiopen={aiopen} setaiopen={setaiopen}/>
   </Sidebar>
 )}
-
+</ThemeProvider>
         </body>
     </html>
   );
