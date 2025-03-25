@@ -78,14 +78,7 @@ export function Sidebar({ children }) {
             {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             <span className="sr-only">Toggle sidebar</span>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 bg-black text-white border-pink-900/50 hover:bg-pink-900/30"
-          >
-            <Bell className="h-4 w-4" />
-            <span className="sr-only">Toggle notifications</span>
-          </Button>
+          
         </div>
       </div>
 
@@ -96,8 +89,6 @@ export function Sidebar({ children }) {
             { href: "/allcourses", icon: BookOpenText, label: "All Courses" },
             { href: "/course", icon: PiBooksDuotone, label: "My Courses" },
             { href: "/assignment", icon: BiTask, label: "Assignments" },
-            { href: "/project", icon: FolderGit2, label: "Projects" },
-            { href: "/discussion", icon: GoDiscussionClosed, label: "Discussion Forum" },
           ].map(({ href, icon: Icon, label }) => (
             <Link
               key={href}
@@ -119,24 +110,7 @@ export function Sidebar({ children }) {
 
       {!isSidebarCollapsed && (
         <div className="mt-auto p-4">
-          <Card className="bg-black border-pink-900/50">
-            <CardHeader className="p-2 pt-0 md:p-4">
-              <CardTitle className="text-pink-500">Explore Our Courses</CardTitle>
-              <CardDescription className="text-white/70">
-                Discover a variety of courses tailored to help you achieve your learning goals. Upgrade to Premium for unlimited access to all courses and exclusive content.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-2 pt-0 md:p-4 md:pt-0">
-              <Button
-                size="sm"
-                className="w-full mb-2 bg-pink-700 hover:bg-pink-600 text-white"
-              >
-                <Link href="/allcourses">
-                  Browse Courses
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+          
         </div>
       )}
     </>
@@ -195,8 +169,7 @@ export function Sidebar({ children }) {
                   { href: "/allcourses", icon: BookOpenText, label: "All Courses" },
                   { href: "/course", icon: PiBooksDuotone, label: "My Courses" },
                   { href: "/assignment", icon: BiTask, label: "Assignments" },
-                  { href: "/project", icon: FolderGit2, label: "Projects" },
-                  { href: "/discussion", icon: GoDiscussionClosed, label: "Discussion Forum" },
+               
                 ].map(({ href, icon: Icon, label }) => (
                   <Link
                     key={href}
@@ -234,12 +207,7 @@ export function Sidebar({ children }) {
           <div className="w-full flex-1">
             <form>
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/70" />
-                <Input
-                  type="search"
-                  placeholder="Search..."
-                  className="w-full bg-black border-pink-900/50 text-white placeholder:text-white/50 pl-8 shadow-none md:w-2/3 lg:w-1/3 focus:ring-pink-700"
-                />
+                
               </div>
             </form>
           </div>
@@ -257,7 +225,7 @@ export function Sidebar({ children }) {
               <Link href="/profile">
                 <DropdownMenuItem className="hover:bg-pink-900/20 hover:text-white">Profile</DropdownMenuItem>
               </Link>
-              <Link href="https://www.devsomeware.com/contact" target="_blank">
+              <Link href="" target="_blank">
                 <DropdownMenuItem className="hover:bg-pink-900/20 hover:text-white">Support</DropdownMenuItem>
               </Link>
               <DropdownMenuSeparator className="bg-pink-900/50" />

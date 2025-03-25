@@ -71,13 +71,13 @@ const page = () => {
     },[])
   return (
     <div>
-        <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-12 mb-8">
+        <header className="bg-gradient-to-r from-black to-pink-900 text-white py-12 mb-8">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center mb-4">
           <GraduationCap className="w-12 h-12 mr-4" />
-          <h1 className="text-4xl font-bold">DevSomeware Skill Lab</h1>
+          <h1 className="text-4xl font-bold">LearnX-AI</h1>
         </div>
-        <p className="text-center text-xl">Enhance your skills with courses provided by DevSomeware, an open-source community that fosters learning and growth.
+        <p className="text-center text-xl">Enhance your skills with courses provided by LearnX-AI.
         </p>
       </div>
     </header>

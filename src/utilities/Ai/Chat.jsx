@@ -14,7 +14,7 @@ const Chat = ({ aiopen, setaiopen }) => {
       role: "user",
       parts: [
         {
-          text: `You are DSW-AI, an AI assistant created by Devsomeware. 
+          text: `You are LearnX-AI, an AI assistant created by Devsomeware. 
                  Your role is to answer technology and coding-related questions only. 
                  If a query is beyond your expertise or violates Devsomeware's privacy policy, 
                  respond with: "I'm sorry, that question is beyond Devsomeware's privacy policy."`,
@@ -25,10 +25,10 @@ const Chat = ({ aiopen, setaiopen }) => {
   const [loading, setLoading] = useState(false);
   const [chat, setChat] = useState([
     {
-      name: "DSW-AI",
+      name: "LearnX-AI",
       type: "bot",
       message:
-        "Hello! I'm an AI assistant created by Devsomeware. How can I help you today with your technology or coding questions?",
+        "Hello! I'm an AI assistant created by LearnX-AI. How can I help you today with your technology or coding questions?",
     },
   ]);
 
@@ -72,7 +72,7 @@ const Chat = ({ aiopen, setaiopen }) => {
         const updatedChat = [
           ...chat,
           { name: "You", type: "user", message: usermessage },
-          { name: "DSW-AI", type: "bot", message: sanitizedBotMessage },
+          { name: "LearnX-AI", type: "bot", message: sanitizedBotMessage },
         ];
 
         setChat(updatedChat);
@@ -128,10 +128,10 @@ const Chat = ({ aiopen, setaiopen }) => {
           <div className="flex flex-col h-full w-full bg-background">
             <header className="flex items-center gap-4 px-6 py-4 border-b bg-card">
               <Avatar className="w-10 h-10 border">
-                <AvatarFallback>DSW</AvatarFallback>
+                <AvatarFallback>LearnX-AI</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium">DSW AI</div>
+                <div className="font-medium">LearnX-AI</div>
                 <div className="text-sm text-muted-foreground">
                   AI Assistant
                 </div>

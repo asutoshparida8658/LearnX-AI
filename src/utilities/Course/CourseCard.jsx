@@ -76,7 +76,7 @@ export function CourseCard({ course ,user,data}) {
             </Badge>
           ))}
         </div>
-        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{course.desc}</p>
+        <p className="text-sm text-white mb-3 line-clamp-3">{course.desc}</p>
         <div className="flex justify-between text-sm text-gray-500">
           <div className="flex items-center">
             <Clock className="w-4 h-4 mr-1" />
@@ -87,27 +87,27 @@ export function CourseCard({ course ,user,data}) {
             <span>{course.seats} seats</span>
           </div>
         </div>
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">What you'll get:</h4>
+        <div className="bg-black border mt-3 border-pink-900 p-3 rounded-lg">
+          <h4 className="font-semibold  text-sm mb-2">What you'll get:</h4>
           <ul className="space-y-2">
             {course.feature.split(",").map((feature, index) => (
               <li key={index} className="flex items-start">
-                <CheckCircle2 className="w-4 h-4 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-pink-500 mr-2 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">{feature}</span>
               </li>
             ))}
           </ul>
         </div>
       </CardContent>
-        <CardFooter className="mt-auto flex justify-between items-center p-4 bg-gray-50">
+        <CardFooter className="mt-auto flex justify-between items-center p-4 bg-black">
             <div className="text-lg font-semibold flex items-center">
                 <>
-                    <Check className="w-5 h-5 mr-1 text-white bg-green-600 rounded-full" />
-                    <span className="text-green-500 mx-1">Free</span>
+                    <Check className="w-5 h-5 mr-1 text-white bg-pink-900 rounded-full" />
+                    <span className="text-pink-900 mx-1">Free</span>
                 </>
             </div>
             <Button
-                disabled={!course.isopen || isenrolled} // Disable if course is closed and not enrolled
+                disabled={!course.isopen || isenrolled} 
                 className="px-6"
                 onClick={handleClick}
             >
@@ -118,7 +118,7 @@ export function CourseCard({ course ,user,data}) {
                     </>
                 ) : (
                     <>
-                        <BookOpen className="w-4 h-4 mr-2" />
+                        <BookOpen className="w-4 h-4  mr-2" />
                         {course.price === 'Free' ? (
                             <>
                                 <Check className="w-4 h-4 mr-2" /> Free

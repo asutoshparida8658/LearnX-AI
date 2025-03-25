@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 export default function Component({title,description,progress,duration,validity,img,skills,isadmin,assignment}) {
  
   return (
-    <Card className="w-full max-w-sm rounded-lg overflow-hidden shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl p-2 my-2 md:mx-2 xl:mx-2 mx-0 lg:mx-2">
+    <Card className="w-full max-w-sm rounded-lg  overflow-hidden shadow-lg transition-transform duration-300 ease-in-out hover:-translate-y-2 hover:shadow-xl p-2 my-2 md:mx-2 xl:mx-2 mx-0 lg:mx-2">
       <div className="relative">
         <img
           src={img}
@@ -17,7 +17,7 @@ export default function Component({title,description,progress,duration,validity,
           className="w-full h-48 object-cover"
         />
         <div className="absolute top-4 left-4 space-x-2">
-          <Badge variant="outline" className="bg-primary text-primary-foreground">
+          <Badge variant="outline" className="bg-black text-white">
             {duration}
           </Badge>
           
