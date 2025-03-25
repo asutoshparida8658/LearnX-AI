@@ -1,6 +1,6 @@
 import React from 'react'
 export const metadata = {
-  title: "Enrolled Courses - DevSomeWare | Learn DevSomeWare",
+  title: "LearnX-AI",
   description:
     "View the courses you are enrolled in on DevSomeWare's Learning Platform. Track your progress, access course materials, and engage with mentors and peers in your learning journey.",
   keywords: [
@@ -19,10 +19,10 @@ export const metadata = {
     icon: "/favicon.ico",
   },
   openGraph: {
-    title: "Enrolled Courses - DevSomeWare | Learn DevSomeWare",
+    title: "LearnX-AI",
     description:
       "Access and manage your enrolled courses on DevSomeWare. Track your learning journey and continue developing your tech skills with personalized course materials.",
-    url: "https://learn.devsomeware.com/course",
+    url: "",
     type: "website",
     images: [
       {
@@ -36,14 +36,14 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     site: "@DevSomeware",
-    title: "Enrolled Courses - DevSomeWare | Learn DevSomeWare",
+    title: "LearnX-AI",
     description:
       "Manage your enrolled courses on DevSomeWare. Track your progress and stay on top of your learning goals. Access course materials and connect with peers.",
     images: "/alogo.png",
   },
-  robots: "index, follow", // Ensuring the user's enrolled courses can be indexed.
+  robots: "index, follow", 
   alternates: {
-    canonical: "https://learn.devsomeware.com/course",
+    canonical: "",
   },
 };
   

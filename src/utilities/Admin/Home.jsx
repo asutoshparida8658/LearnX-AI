@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 
 const Home = ({name}) => {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-black">
      
       <main className="container mx-auto px-6 py-8">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
@@ -88,8 +88,8 @@ const Home = ({name}) => {
           </Card>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-3 lg:grid-cols-3">
-  <div className="col-span-2 bg-white rounded-lg p-8 shadow-lg">
-    <h2 className="text-3xl font-bold mb-4 text-gray-800">Welcome Back! {name}</h2>
+  <div className="col-span-2 bg-black border border-pink-900 rounded-lg p-8 shadow-lg">
+    <h2 className="text-3xl font-bold mb-4 text-white">Welcome Back! {name}</h2>
     <div className="grid md:grid-cols-2 gap-6">
       <div className="bg-blue-100 p-4 rounded-lg shadow-sm">
         <h3 className="text-xl font-semibold text-gray-700">New Courses</h3>
@@ -113,8 +113,8 @@ const Home = ({name}) => {
       </div>
     </div>
   </div>
-  <div className="bg-white rounded-lg p-8 shadow-lg">
-    <h2 className="text-3xl font-bold mb-4 text-gray-800">Recent Announcements</h2>
+  <div className="bg-black border border-pink-900 rounded-lg p-8 shadow-lg">
+    <h2 className="text-3xl font-bold mb-4 text-white">Recent Announcements</h2>
     <div className="space-y-4">
       <div className="border-b pb-4 shadow-lg p-4 rounded border-green-200 border-2 bg-yellow-100">
         <h3 className="text-xl font-semibold text-gray-700">New Course Released: Advanced JavaScript</h3>

@@ -285,7 +285,7 @@ export default function CourseSidebar({
       <Toaster position="top-center" expand={false} />
 
       <div className=" h-[100vh] w-full flex-col  ">
-        <header className="lg:fixed lg:top-0 lg:left-0 w-full bg-white dark:bg-gray-900 p-3 md:p-4 flex flex-col md:flex-row justify-between items-center shadow h-20 z-20 md:fixed md:top-0 md:left-0">
+        <header className="lg:fixed lg:top-0 lg:left-0 w-full bg-black border border-pink-900 p-3 md:p-4 flex flex-col md:flex-row justify-between items-center shadow h-20 z-20 md:fixed md:top-0 md:left-0">
           <div className="flex items-center mb-2 md:mb-0">
             {!isopen && (
               <div className="mx-4">
@@ -300,12 +300,12 @@ export default function CourseSidebar({
            
             
           </div>
-          <h2 className="text-md md:text-lg font-bold text-gray-800 dark:text-gray-400 mb-2 md:mb-0">
+          <h2 className="text-2xl font-bold text-white dark:text-gray-400 mb-2 md:mb-0">
             {alldata.title}
           </h2>
           <div className="flex space-x-3">
             <button
-              className="flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-full shadow hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-300 ease-in-out"
+              className="flex items-center  text-white px-3 py-1.5 rounded-full shadow hover:bg-blue-700 bg-pink-900 dark:hover:bg-pink-500 transition duration-300 ease-in-out"
               onClick={handleNavigationPrevious}
             >
               <svg
@@ -325,7 +325,7 @@ export default function CourseSidebar({
               Previous
             </button>
             <button
-              className="flex items-center bg-blue-600 text-white px-3 py-1.5 rounded-full shadow hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition duration-300 ease-in-out"
+              className="flex items-center bg-pink-900 text-white px-3 py-1.5 rounded-full shadow hover:bg-blue-700  hover:bg-pink-500 transition duration-300 ease-in-out"
               onClick={handleNavigationNext}
             >
               <svg
@@ -362,7 +362,7 @@ export default function CourseSidebar({
 
         <div className="flex flex-1 pt-16">
           <div
-            className={`z-50 bg-white dark:bg-gray-800 p-6 border-r w-[300px] fixed top-0 left-0 h-full transform transition-transform duration-300 ease-in-out ${
+            className={`z-50 bg-black border-pink-900 p-6 border-r w-[300px] fixed top-0 left-0 h-full transform transition-transform duration-300 ease-in-out ${
               isopen ? "sm:translate-x-0" : "-translate-x-full"
             } ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}
           >
@@ -373,13 +373,9 @@ export default function CourseSidebar({
                   setActiveFolder("overview");
                 }}
               >
-                <img
-                  src="https://res.cloudinary.com/db0x5vhbk/image/upload/v1733634184/x0vx8af6jmxfpp5tjjjk.png"
-                  alt="Company Logo"
-                  className="h-6 mr-2"
-                />
-                <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                  Devsomeware
+                
+                <h1 className="text-xl font-bold text-pink-500">
+                  LearnX-AI
                 </h1>
               </div>
               {!isMenuOpen && (
@@ -646,7 +642,7 @@ export default function CourseSidebar({
                         </div>
                         <div className="mt-8">
                           <button
-                            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 my-2"
+                            className="inline-flex items-center justify-center rounded-md bg-pink-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-pink-500/90 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 my-2"
                             onClick={() => {
                               setMenuWeek(weeksdata[0].name);
                               setIsopen(true);
@@ -656,7 +652,7 @@ export default function CourseSidebar({
                           </button>
                           <a
                             href="#coursecontent"
-                            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 mx-6 my-2"
+                            className="inline-flex items-center justify-center rounded-md bg-pink-900 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-pink-500/90 focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 mx-6 my-2"
                           >
                             Course Content
                           </a>
