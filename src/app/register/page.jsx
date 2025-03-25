@@ -20,7 +20,6 @@ export default function Register() {
     const [isOtpVerified, setIsOtpVerified] = useState(false);
     const router = useRouter();
 
-    // Get email from URL query parameters
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const emailParam = params.get('email');
