@@ -49,25 +49,36 @@ const handleOtpSend = async(e)=>{
        console.log(data)
     }
 }
-const hanldeVerifyOtp = async()=>{ 
-if(otp==""){
-  toast.error("Please enter otp");
-  return
-}
-setLoading(true);
-let data = await axios.post("/api/auth",{email:email.toLowerCase(),type:"verify",otp:otp})
-   setLoading(false)
-    if(data.data.success){
-        setIsOtpsent(true);
-        toast.success(data.data.message)
-        localStorage.setItem("dilmstoken",data.data.token);
-        router.push("/")
-    }
-    else{
-      toast.error(data.data.message);
-       console.log(data)
-    }
-
+const hanldeVerifyOtp = async() => { 
+  if(otp == "") {
+      toast.error("Please enter otp");
+      return
+  }
+  setLoading(true);
+  try {
+      let data = await axios.post("/api/auth", {
+          email: email.toLowerCase(),
+          type: "verify",
+          otp: otp
+      });
+      setLoading(false);
+      
+      if (data.data.success) {
+          setIsOtpsent(true);
+          toast.success(data.data.message);
+          localStorage.setItem("dilmstoken", data.data.token);
+          router.push("/");
+      } else if (data.data.requiresRegistration) {
+          // Redirect to registration page when new user is detected
+          toast.info("Please complete your registration");
+          router.push(`/register?email=${encodeURIComponent(email)}`);
+      } else {
+          toast.error(data.data.message);
+      }
+  } catch(err) {
+      setLoading(false);
+      toast.error("Something went wrong. Please try again later!");
+  }
 }
 console.log(otp);
   return (
