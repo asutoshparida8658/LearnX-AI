@@ -46,7 +46,7 @@ export default function AdminSidebar({ children }) {
 
   return (
     <div className="flex min-h-screen w-full">
-      <aside className="sticky top-0 hidden h-screen w-[280px] lg:w-[280px] shrink-0 border-pink-900 border-r bg-background md:block">
+      <aside className="sticky top-0 hidden h-screen w-[280px] lg:w-[280px] shrink-0  border-pink-900 border-r bg-black md:block">
         <div className="flex h-16 items-center justify-between border-b border-pink-900 px-4">
           <Link href="/admin" className="flex items-center gap-2 font-semibold">
             <div className="text-pink-600 font-bold">
@@ -143,7 +143,7 @@ export default function AdminSidebar({ children }) {
         </nav>
       </aside>
       <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b bg-background px-4 shadow-sm md:px-6">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-pink-900 bg-black border px-4 shadow-sm md:px-6">
           <div className="mr-auto flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
@@ -156,14 +156,9 @@ export default function AdminSidebar({ children }) {
                 <nav className="grid gap-6 text-lg font-medium">
                   <Link href="/" className="flex items-center gap-2 font-semibold mx-3">
                     <div>
-                      <Image 
-                        src="https://res.cloudinary.com/db0x5vhbk/image/upload/v1733634184/x0vx8af6jmxfpp5tjjjk.png" 
-                        alt="My Image"
-                        width={25}
-                        height={25}
-                      />
+                      
                     </div>
-                    <span className="">Devsomeware</span>
+                    <span className="">LearnX-AI</span>
                   </Link>
                   <Link
                     href="/admin"

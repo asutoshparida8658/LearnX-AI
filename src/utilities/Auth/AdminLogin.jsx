@@ -7,167 +7,201 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import ProfielSpinner from "../Spinner/ProfielSpinner"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     InputOTP,
     InputOTPGroup,
-    InputOTPSeparator,
     InputOTPSlot,
-  } from "@/components/ui/input-otp"
+} from "@/components/ui/input-otp"
 import axios from "axios"
-  
+
 export function AdminLogin() {
-    const [email,setEmail] = useState("");
-    const [otp,setOtp] = useState("");
-    const [isOtpsent,setIsOtpsent]=useState(false);
-    const [loading,setLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [otp, setOtp] = useState("");
+    const [isOtpSent, setIsOtpSent] = useState(false);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const handleChange = (e)=>{
-    if(e.target.name=="email"){
-        setEmail(e.target.value);
-    }
-    else if(e.target.name=="otp"){
-        setOtp(e.target.value); 
-    }
-}
-const handleOtpSend = async(e)=>{
-  e.preventDefault();
-  if(email==""){
-    toast.error("Please enter your email");
-    return
-  }
-  try{
-  setLoading(true);
-   let data = await axios.post("/api/adminauth",{email:email.toLowerCase(),type:"send"})
-   setLoading(false)
-    if(data.data.success){
-        setIsOtpsent(true);
-        toast.success(data.data.message)
-         
-    }
-    else{
-      toast.error(data.data.message);
-       console.log(data)
-    }
-}
-catch(err){
-    toast.error("Something went wrong try again after some time!"+err)
-    setLoading(false);
-}
-}
-const hanldeVerifyOtp = async()=>{ 
-if(otp==""){
-  toast.error("Please enter otp");
-  return
-}
-setLoading(true);
-let data = await axios.post("/api/adminauth",{email:email.toLowerCase(),type:"verify",otp:otp})
-   setLoading(false)
-    if(data.data.success){
-        setIsOtpsent(true);
-        toast.success(data.data.message)
-        localStorage.setItem("dilmsadmintoken",data.data.token);
-        router.push("/admin")
-    }
-    else{
-      toast.error(data.data.message);
-       console.log(data)
-    }
 
-}
-console.log(otp);
-  return (
-    <div className="">
-     <Toaster position="top-center"  expand={false}/>
-    {loading?<div className="absolute flex justify-center items-center h-full w-full"><ProfielSpinner/></div>:""}
-    <div className={`w-full lg:grid  lg:grid-cols-2  ${loading?"opacity-30":""}`}>
-     
-      <div className="flex items-center justify-center py-12">
-        <div className="mx-auto grid w-[350px] gap-6">
-          <div className="grid gap-2 text-center">
-          <div className="flex justify-center items-center my-4">
-          <img
-        src="https://res.cloudinary.com/db0x5vhbk/image/upload/v1733634184/x0vx8af6jmxfpp5tjjjk.png" 
-        alt="My Image"
-      className="lg:h-16 lg:w-48 lg:absolute w-48 h-16"
-      />
-    </div>
-            <h1 className="text-3xl font-bold mt-16">Admin Login to Learn-Devsomeware</h1>
-            <p className="text-balance text-muted-foreground ">
-              Enter your email to login to your admin account.
-            </p>
-          </div>
-          <div className="grid gap-4">
-            {!isOtpsent&&<div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                name="email"
-                placeholder="m@example.com"
-                onChange={handleChange}
-                value={email}
-                required
-              />
-            </div>}
-            {isOtpsent&&<div className="grid gap-2 flex justify-center">
-              <Label htmlFor="email">Otp (One Time Password)</Label>
-              <InputOTP maxLength={6} onChange={(value)=>{setOtp(value)}}>
-  <InputOTPGroup className="text-4xl">
-    <InputOTPSlot index={0}  />
-    <InputOTPSlot index={1} />
-    <InputOTPSlot index={2} />
-    </InputOTPGroup>
-    <InputOTPSeparator/>
-    <InputOTPGroup>
-    <InputOTPSlot index={3} />
-    <InputOTPSlot index={4} />
-    <InputOTPSlot index={5} />
-    </InputOTPGroup>
+    useEffect(() => {
+        // Check if admin is already logged in
+        const token = localStorage.getItem("dilmsadmintoken");
+        if (token) {
+            router.push("/admin");
+        }
 
-</InputOTP>
+        // Get email from URL params if present
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailParam = urlParams.get('email');
+        if (emailParam) {
+            setEmail(emailParam);
+        }
+    }, [router]);
 
-            </div>}
-            {/* <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link
-                  href="/forgot-password"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" type="password" required />
-            </div> */}
-            {!isOtpsent&&<Button type="submit" className="w-full" variant="devsindia" onClick={handleOtpSend}>
-              {loading?"Sending...":"Send OTP"}
-            </Button>}
-            {isOtpsent&&<Button type="submit" className="w-full" variant="devsindia" onClick={hanldeVerifyOtp}>
-              {loading?"Verifying...":"Login"}
-            </Button>}
-            {/* <Button variant="outline" className="w-full">
-              Login with Google
-            </Button> */}
-          </div>
-          {/* <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="#" className="underline">
-              Sign up
-            </Link>
-          </div> */}
-        </div>
-      </div>
-      <div className="hidden bg-muted lg:block">
-        <Image
-          src="https://res.cloudinary.com/db0x5vhbk/image/upload/v1733758106/sp4p5jakzob6dxjxvlhw.png"
-          alt="Image"
-          width="1920"
-          height="1080"
-          className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div>
-    </div>
-    </div>
-  )
+    const handleChange = (e) => {
+        if (e.target.name === "email") {
+            setEmail(e.target.value);
+        }
+    };
+
+    const handleOtpSend = async (e) => {
+        e.preventDefault();
+
+        // Validate email
+        if (!email || !email.includes('@')) {
+            toast.error("Please enter a valid email address");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await axios.post("/api/adminauth", {
+                email: email.toLowerCase(),
+                type: "send"
+            });
+
+            setLoading(false);
+
+            if (data.data.success) {
+                setIsOtpSent(true);
+                toast.success(data.data.message);
+            } else {
+                toast.error(data.data.message);
+            }
+        } catch (err) {
+            setLoading(false);
+            toast.error("Something went wrong. Please try again later!");
+            console.error(err);
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await axios.post("/api/adminauth", {
+                email: email.toLowerCase(),
+                type: "verify",
+                otp: otp
+            });
+
+            setLoading(false);
+
+            if (data.data.success) {
+                toast.success(data.data.message);
+                localStorage.setItem("dilmsadmintoken", data.data.token);
+                // Small delay for toast visibility before redirect
+                setTimeout(() => {
+                    router.push("/admin");
+                }, 1000);
+            } else {
+                toast.error(data.data.message);
+            }
+        } catch (err) {
+            setLoading(false);
+            toast.error("Authentication failed. Please try again.");
+            console.error(err);
+        }
+    };
+
+    return (
+        <>
+            <Toaster position="top-center" expand={false} />
+            {loading && (
+                <div className="absolute flex justify-center items-center h-full w-full bg-black bg-opacity-50 z-50">
+                    <ProfielSpinner />
+                </div>
+            )}
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-black text-gray-100">
+                <div className={`w-full max-w-md p-8 rounded-lg shadow-lg bg-gray-900 ${loading ? "opacity-30" : ""} transition-opacity duration-300`}>
+                    <div className="text-center mb-6">
+                        <div className="flex justify-center items-center mb-4">
+                            
+                        </div>
+                        <h1 className="text-4xl font-bold text-pink-500">Admin Login</h1>
+                        <p className="text-gray-400 mt-2">Login to manage your LearnX-AI platform</p>
+                    </div>
+                    <div className="space-y-6">
+                        {!isOtpSent && (
+                            <form onSubmit={handleOtpSend} className="space-y-4">
+                                <div>
+                                    <Label htmlFor="email" className="text-gray-300">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        name="email"
+                                        placeholder="admin@example.com"
+                                        onChange={handleChange}
+                                        value={email}
+                                        required
+                                        className="w-full mt-2 bg-gray-800 text-gray-100 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded-lg transition-all duration-200"
+                                    disabled={loading}
+                                >
+                                    {loading ? "Sending..." : "Send OTP"}
+                                </Button>
+                            </form>
+                        )}
+                        {isOtpSent && (
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="otp" className="text-gray-300">Enter the 6-digit OTP sent to your email</Label>
+                                    <InputOTP
+                                        maxLength={6}
+                                        onChange={(value) => { setOtp(value); }}
+                                        className="mt-2"
+                                    >
+                                        <InputOTPGroup className="flex justify-between gap-2">
+                                            {Array.from({ length: 6 }).map((_, index) => (
+                                                <InputOTPSlot
+                                                    key={index}
+                                                    index={index}
+                                                    className="w-12 h-12 bg-gray-800 text-gray-100 border border-gray-700 rounded-lg text-center text-2xl focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                                />
+                                            ))}
+                                        </InputOTPGroup>
+                                    </InputOTP>
+                                </div>
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded-lg transition-all duration-200"
+                                    onClick={handleVerifyOtp}
+                                    disabled={loading}
+                                >
+                                    {loading ? "Verifying..." : "Verify & Login"}
+                                </Button>
+                                <div className="text-center">
+                                    <button
+                                        onClick={() => {
+                                            setIsOtpSent(false);
+                                            setOtp("");
+                                        }}
+                                        className="text-pink-400 hover:text-pink-300 text-sm"
+                                        disabled={loading}
+                                    >
+                                        Change email or resend OTP
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {/* <div className="mt-6 text-center">
+                        <p className="text-gray-400">
+                            Don't have an account?{" "}
+                            <Link href="/admin/register" className="text-pink-500 hover:underline">
+                                Register
+                            </Link>
+                        </p>
+                    </div> */}
+                </div>
+            </div>
+        </>
+    );
 }
