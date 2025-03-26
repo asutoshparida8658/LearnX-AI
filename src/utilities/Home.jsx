@@ -1,40 +1,199 @@
 "use client"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Progress } from "@/components/ui/progress"
-import { Toaster } from "sonner"
-import { useState } from "react"
+import { Toaster, toast } from "sonner"
 import { useRouter } from "next/navigation"
 import SessionDetected from "./Auth/SessionDetected"
-import Image from "next/image"
 import HomePageSkl from "./skeleton/HomePageSkl"
 import useFcmToken from "../../hooks/useFcmToken"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Book,
+  Briefcase,
+  Clock,
+  Code,
+  Cpu,
+  GraduationCap,
+  LineChart,
+  MessageSquare,
+  Rocket,
+  Trophy,
+  Calendar,
+  CheckCircle,
+  BarChart3,
+  BadgeCheck,
+  BellRing
+} from "lucide-react"
 
 export default function Home() {
   const router = useRouter();
   const { token } = useFcmToken();
   const [data, setData] = useState(null);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [isansession, setisansession] = useState(false);
+  const [stats, setStats] = useState({
+    coursesCount: 0,
+    assignmentsCount: 0,
+    completedLessons: 0,
+    overallProgress: 0,
+    rank: "Beginner"
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
 
-  const dashboardStats = [
-    { title: "Courses", value: data?.length || 0, icon: "📚" },
-    { title: "Assignments", value: 3, icon: "📋" },
-    { title: "Projects", value: 3, icon: "💼" },
-    { title: "Rank", value: "99+", icon: "🏆" }
-  ];
+  // Fetch user data and courses
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/homeauth", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "token": localStorage.getItem("dilmstoken")
+          }
+        });
 
-  const sampleNotifications = [
-    { icon: "🔔", title: "New Course", text: "Cloud Computing course added." },
-    { icon: "📅", title: "Deadline", text: "Project proposal due July 26, 2024." },
-    { icon: "🏅", title: "Evaluation", text: "Project review on August 20th, 2024." }
-  ];
+        const res = await response.json();
+        setLoading(false);
 
-  const sampleProjects = [
-    { title: "Capstone Project", progress: 25 },
-    { title: "Group Project", progress: 50 },
-    { title: "Individual Project", progress: 75 }
-  ];
+        if (res.success) {
+          setData(res.data);
+          setUser(res.user);
+          
+          // Calculate stats based on actual data
+          if (res.data && res.data.length > 0) {
+            const completedLessons = res.data.reduce((total, course) => 
+              total + (course.crcmp ? course.crcmp.length : 0), 0);
+            
+            const overallProgress = res.data.reduce((total, course) => 
+              total + (course.progress || 0), 0) / res.data.length;
+
+            // Determine rank based on progress and completed courses
+            let rank = "Beginner";
+            if (overallProgress > 75) rank = "Expert";
+            else if (overallProgress > 50) rank = "Advanced";
+            else if (overallProgress > 25) rank = "Intermediate";
+
+            setStats({
+              coursesCount: res.data.length,
+              assignmentsCount: Math.min(res.data.length * 2, 10), // Estimate
+              completedLessons,
+              overallProgress,
+              rank
+            });
+
+            // Generate recent activity (based on actual course progress)
+            const activities = [];
+            res.data.forEach(course => {
+              if (course.crcmp && course.crcmp.length > 0) {
+                // Get the latest completed item
+                const latestCompleted = course.crcmp[course.crcmp.length - 1];
+                activities.push({
+                  type: 'completion',
+                  title: `Completed "${latestCompleted.name}"`,
+                  course: course.courseid.title,
+                  time: '2 days ago',
+                  icon: CheckCircle
+                });
+              }
+              
+              if (course.progress && course.progress > 0) {
+                activities.push({
+                  type: 'progress',
+                  title: `Made progress in course`,
+                  course: course.courseid.title,
+                  progress: course.progress,
+                  time: '1 day ago',
+                  icon: BarChart3
+                });
+              }
+            });
+
+            // Add a message activity if we don't have enough activities
+            if (activities.length < 3) {
+              activities.push({
+                type: 'message',
+                title: 'New platform update',
+                message: 'Check out the new AI assistant feature!',
+                time: '3 days ago',
+                icon: BellRing
+              });
+            }
+
+            setRecentActivity(activities.slice(0, 3));
+
+            // Generate upcoming deadlines and events
+            const today = new Date();
+            const events = [
+              {
+                title: "Assignment Deadline",
+                course: res.data[0]?.courseid.title || "Your Course",
+                date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000),
+                icon: Calendar
+              },
+              {
+                title: "Live Q&A Session",
+                course: "All Courses",
+                date: new Date(today.getTime() + 5 * 24 * 60 * 60 * 1000),
+                icon: MessageSquare
+              },
+              {
+                title: "Project Submission",
+                course: res.data[0]?.courseid.title || "Your Course",
+                date: new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000),
+                icon: Briefcase
+              }
+            ];
+            setUpcomingEvents(events);
+          }
+        } else {
+          if (res.ansession) {
+            setisansession(true);
+          }
+          setTimeout(() => {
+            router.push("/login");
+          }, 2000);
+        }
+      } catch (err) {
+        setLoading(false);
+        console.error("Error fetching data:", err);
+        toast.error("Failed to load your dashboard data");
+      }
+    };
+
+    if (localStorage.getItem("dilmstoken")) {
+      fetchData();
+    } else {
+      router.push("/login");
+    }
+  }, [router]);
+
+  // Calculate course recommendation
+  const getRecommendedCourse = () => {
+    if (!data || data.length === 0) return null;
+    
+    // Find the course with the lowest progress
+    const lowestProgressCourse = [...data].sort((a, b) => 
+      (a.progress || 0) - (b.progress || 0)
+    )[0];
+    
+    return lowestProgressCourse;
+  };
+
+  const recommendedCourse = getRecommendedCourse();
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   return (
     <>
@@ -43,136 +202,327 @@ export default function Home() {
       {isansession && <SessionDetected />}
       
       {!loading && !isansession && (
-        <div className="min-h-screen bg-black text-white p-4 md:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
-              <div className="text-xs md:text-sm text-white/70">
-                Welcome, {user?.name || 'Guest'} • {new Date().toLocaleDateString()}
+        <div className="min-h-screen bg-black text-white">
+          {/* Hero Section with User Welcome */}
+          <div className="bg-gradient-to-br from-gray-900 to-black border-b border-pink-900/30 py-8 px-4 md:px-8">
+            <div className="max-w-7xl mx-auto">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                <div>
+                  <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                    Welcome back, <span className="text-pink-500">{user?.name?.split(' ')[0] || 'Learner'}</span>
+                  </h1>
+                  <p className="text-gray-400">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                    {' '} • {' '}
+                    <span className="text-pink-500 font-medium">
+                      {stats.rank} Level
+                    </span>
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/course">
+                    <Button variant="outline" className="bg-gray-900 border-pink-700 text-white hover:bg-pink-900/30">
+                      <Book className="mr-2 h-4 w-4" />
+                      My Courses
+                    </Button>
+                  </Link>
+                  <Link href="/allcourses">
+                    <Button className="bg-pink-700 hover:bg-pink-600 text-white">
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Explore Courses
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
-
-            {/* Dashboard Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {dashboardStats.map((stat, index) => (
-                <div 
-                  key={index} 
-                  className="bg-gray-950 rounded-xl p-3 border border-pink-600 hover:border-pink-500 transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white/70 font-medium text-xs">{stat.title}</p>
-                      <p className="text-lg font-bold text-white mt-1">{stat.value}</p>
-                    </div>
-                    <span className="text-lg opacity-70">{stat.icon}</span>
+          </div>
+          
+          <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <Card className="bg-gray-900 border-pink-900/30 shadow-lg">
+                <CardContent className="p-4 flex items-start">
+                  <div className="rounded-full bg-pink-500/10 p-3 mr-4">
+                    <Book className="h-6 w-6 text-pink-500" />
                   </div>
-                </div>
-              ))}
+                  <div>
+                    <p className="text-sm text-gray-400">Enrolled Courses</p>
+                    <h3 className="text-2xl font-bold">{stats.coursesCount}</h3>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-900 border-pink-900/30 shadow-lg">
+                <CardContent className="p-4 flex items-start">
+                  <div className="rounded-full bg-purple-500/10 p-3 mr-4">
+                    <CheckCircle className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Completed Lessons</p>
+                    <h3 className="text-2xl font-bold">{stats.completedLessons}</h3>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-900 border-pink-900/30 shadow-lg">
+                <CardContent className="p-4 flex items-start">
+                  <div className="rounded-full bg-blue-500/10 p-3 mr-4">
+                    <Code className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Assignments</p>
+                    <h3 className="text-2xl font-bold">{stats.assignmentsCount}</h3>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gray-900 border-pink-900/30 shadow-lg">
+                <CardContent className="p-4 flex items-start">
+                  <div className="rounded-full bg-yellow-500/10 p-3 mr-4">
+                    <Trophy className="h-6 w-6 text-yellow-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Overall Progress</p>
+                    <h3 className="text-2xl font-bold">{Math.round(stats.overallProgress || 0)}%</h3>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Main Content */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Courses Section */}
-              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">Courses</h2>
-                  <Link href="/course" className="text-white/70 hover:text-white text-xs">
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-2">
-                  {data?.slice(0, 3).map((item, index) => (
-                    <div key={index} className="flex items-center gap-2 bg-gray-900 p-2 rounded-lg">
-                      <Image
-                        src={item.courseid.img}
-                        width={32}
-                        height={32}
-                        className="rounded-md"
-                        alt="Course Thumbnail"
-                      />
-                      <div className="flex-1">
-                        <p className="text-white font-medium text-xs truncate">{item.courseid.title}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          <Progress value={item.progress} className="w-full h-1 bg-gray-800" />
-                          <span className="text-[10px] text-white/70">{item.progress}%</span>
-                        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Course Progress Section */}
+              <div className="lg:col-span-2 space-y-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center">
+                  <Book className="mr-2 h-5 w-5 text-pink-500" />
+                  Your Course Progress
+                </h2>
+                
+                {data && data.length > 0 ? (
+                  <div className="space-y-4">
+                    {data.slice(0, 3).map((course, index) => (
+                      <Card key={index} className="bg-gray-900 border-pink-900/30 overflow-hidden">
+                        <CardContent className="p-0">
+                          <div className="flex flex-col md:flex-row items-center">
+                            <div className="w-full md:w-48 h-32 overflow-hidden">
+                              <img 
+                                src={course.courseid.img} 
+                                alt={course.courseid.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="p-4 flex-1">
+                              <h3 className="text-lg font-semibold mb-1 text-white">{course.courseid.title}</h3>
+                              <div className="flex flex-wrap items-center text-xs gap-2 mb-3">
+                                <Badge variant="outline" className="bg-pink-900/20 text-pink-300 border-pink-500/50">
+                                  {course.courseid.duration} months
+                                </Badge>
+                                {course.courseid.skills.split(',').slice(0, 2).map((skill, i) => (
+                                  <Badge key={i} variant="outline" className="bg-gray-800 text-gray-300 border-gray-700">
+                                    {skill.trim()}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center text-xs">
+                                  <span className="text-gray-400">Progress</span>
+                                  <span className="text-white font-medium">{course.progress || 0}%</span>
+                                </div>
+                                <Progress value={course.progress || 0} className="h-2 bg-gray-800" />
+                              </div>
+                              <div className="mt-3 flex justify-end">
+                                <Link href={`/course/detail/${course.courseid._id}`}>
+                                  <Button variant="outline" size="sm" className="text-white border-pink-700 hover:bg-pink-900/30">
+                                    Continue Learning
+                                  </Button>
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    
+                    {data.length > 3 && (
+                      <div className="text-center">
+                        <Link href="/course">
+                          <Button variant="ghost" className="text-pink-400 hover:text-pink-300 hover:bg-pink-900/20">
+                            View All Courses
+                          </Button>
+                        </Link>
                       </div>
-                    </div>
-                  ))}
+                    )}
+                  </div>
+                ) : (
+                  <Card className="bg-gray-900 border-pink-900/30">
+                    <CardContent className="p-6 text-center">
+                      <GraduationCap className="h-12 w-12 mx-auto text-pink-500 mb-3 opacity-80" />
+                      <h3 className="text-lg font-semibold mb-2">No courses yet</h3>
+                      <p className="text-gray-400 mb-4">Start your learning journey by enrolling in a course</p>
+                      <Link href="/allcourses">
+                        <Button className="bg-pink-700 hover:bg-pink-600">
+                          Browse Courses
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Recent Activity */}
+                <div className="mt-8">
+                  <h2 className="text-xl font-bold mb-4 flex items-center">
+                    <Clock className="mr-2 h-5 w-5 text-pink-500" />
+                    Recent Activity
+                  </h2>
+                  
+                  <Card className="bg-gray-900 border-pink-900/30">
+                    <CardContent className="p-4">
+                      {recentActivity.length > 0 ? (
+                        <div className="space-y-4">
+                          {recentActivity.map((activity, index) => (
+                            <div key={index} className="flex gap-3 items-start pb-3 border-b border-gray-800 last:border-0 last:pb-0">
+                              <div className="rounded-full bg-gray-800 p-2">
+                                <activity.icon className="h-4 w-4 text-pink-500" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-sm font-medium">{activity.title}</h4>
+                                <p className="text-xs text-gray-400">
+                                  {activity.course && `In ${activity.course}`}
+                                  {activity.message && activity.message}
+                                </p>
+                                {activity.type === 'progress' && activity.progress && (
+                                  <Progress value={activity.progress} className="h-1 mt-2 bg-gray-800 w-32" />
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">{activity.time}</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center text-gray-400 py-2">No recent activity</p>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
-
-              {/* Assignments Section */}
-              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">Assignments</h2>
-                  <Link href="/assignment" className="text-white/70 hover:text-white text-xs">
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-2">
-                  {sampleProjects.slice(0, 3).map((item, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-900 p-2 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/70 text-base">📋</span>
-                        <div>
-                          <p className="text-white font-medium text-xs">{item.title}</p>
-                          <p className="text-[10px] text-white/50">
-                            Due: {new Date().toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-white bg-white/10 px-1.5 py-0.5 rounded-md">Pending</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Projects Section */}
-              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">Projects</h2>
-                  <Link href="/project" className="text-white/70 hover:text-white text-xs">
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-2">
-                  {sampleProjects.map((project, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-900 p-2 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-white/70 text-base">💼</span>
-                        <div className="flex-1">
-                          <p className="text-white font-medium text-xs">{project.title}</p>
-                          <div className="flex items-center gap-1 mt-1">
-                            <Progress value={project.progress} className="w-full h-1 bg-gray-800" />
-                            <span className="text-[10px] text-white/70">{project.progress}%</span>
+              
+              {/* Sidebar Content */}
+              <div className="space-y-6">
+                {/* Upcoming Events */}
+                <div>
+                  <h2 className="text-xl font-bold mb-4 flex items-center">
+                    <Calendar className="mr-2 h-5 w-5 text-pink-500" />
+                    Upcoming Events
+                  </h2>
+                  
+                  <Card className="bg-gray-900 border-pink-900/30">
+                    <CardContent className="p-4 space-y-4">
+                      {upcomingEvents.map((event, index) => (
+                        <div key={index} className="flex gap-3 items-start pb-3 border-b border-gray-800 last:border-0 last:pb-0">
+                          <div className="rounded-full bg-gray-800 p-2">
+                            <event.icon className="h-4 w-4 text-pink-500" />
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-medium">{event.title}</h4>
+                            <p className="text-xs text-gray-400">{event.course}</p>
+                            <p className="text-xs text-pink-400 mt-1">
+                              Due: {formatDate(event.date)}
+                            </p>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      ))}
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
-
-              {/* Notifications Section */}
-              <div className="bg-gray-950 rounded-xl p-4 border border-pink-600 space-y-3 h-full">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-base font-semibold">Notifications</h2>
-                  <Link href="#" className="text-white/70 hover:text-white text-xs">
-                    View All
-                  </Link>
+                
+                {/* Recommended Next Steps */}
+                <div>
+                  <h2 className="text-xl font-bold mb-4 flex items-center">
+                    <Rocket className="mr-2 h-5 w-5 text-pink-500" />
+                    Recommended Next
+                  </h2>
+                  
+                  <Card className="bg-gray-900 border-pink-900/30">
+                    <CardContent className="p-4">
+                      {recommendedCourse ? (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-medium">Continue Learning</h3>
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded overflow-hidden">
+                              <img 
+                                src={recommendedCourse.courseid.img} 
+                                alt={recommendedCourse.courseid.title}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium">{recommendedCourse.courseid.title}</h4>
+                              <Progress value={recommendedCourse.progress || 0} className="h-1 mt-1 bg-gray-800 w-full" />
+                            </div>
+                          </div>
+                          <div className="pt-2">
+                            <Link href={`/course/detail/${recommendedCourse.courseid._id}`}>
+                              <Button size="sm" className="w-full bg-pink-700 hover:bg-pink-600">
+                                Resume Course
+                              </Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-medium">Explore New Courses</h3>
+                          <p className="text-xs text-gray-400">Discover courses aligned with your interests</p>
+                          <Link href="/allcourses">
+                            <Button size="sm" className="w-full bg-pink-700 hover:bg-pink-600">
+                              Browse Catalog
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
                 </div>
-                <div className="space-y-2">
-                  {sampleNotifications.map((notification, index) => (
-                    <div key={index} className="flex items-start gap-2 bg-gray-900 p-2 rounded-lg">
-                      <span className="text-base">{notification.icon}</span>
-                      <div>
-                        <p className="text-white font-medium text-xs">{notification.title}</p>
-                        <p className="text-[10px] text-white/70">{notification.text}</p>
+                
+                {/* Learning Resources */}
+                <div>
+                  <h2 className="text-xl font-bold mb-4 flex items-center">
+                    <Cpu className="mr-2 h-5 w-5 text-pink-500" />
+                    Learning Resources
+                  </h2>
+                  
+                  <Card className="bg-gray-900 border-pink-900/30">
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-gray-800 p-2">
+                          <MessageSquare className="h-4 w-4 text-pink-500" />
+                        </div>
+                        <div>
+                        <h4 className="text-sm font-medium">AI Learning Assistant</h4>
+                          <p className="text-xs text-gray-400">Get personalized help with your courses</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-gray-800 p-2">
+                          <LineChart className="h-4 w-4 text-pink-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium">Learning Analytics</h4>
+                          <p className="text-xs text-gray-400">Track your progress and performance</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-full bg-gray-800 p-2">
+                          <BadgeCheck className="h-4 w-4 text-pink-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-medium">Certification Path</h4>
+                          <p className="text-xs text-gray-400">Earn certificates for your skills</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -180,205 +530,5 @@ export default function Home() {
         </div>
       )}
     </>
-  )
-}
-// ... (rest of the SVG icon components remain unchanged)
-
-// ... (rest of the SVG icon components remain unchanged)
-// ... (rest of the SVG icon components remain unchanged)
-// ... (rest of the SVG icon components remain unchanged)
-function AwardIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526" />
-      <circle cx="12" cy="8" r="6" />
-    </svg>
-  )
-}
-
-
-function BellIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-    </svg>
-  )
-}
-
-
-function BookOpenIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-    </svg>
-  )
-}
-
-
-function BriefcaseIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-      <rect width="20" height="14" x="2" y="6" rx="2" />
-    </svg>
-  )
-}
-
-
-function CalendarIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M8 2v4" />
-      <path d="M16 2v4" />
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <path d="M3 10h18" />
-    </svg>
-  )
-}
-
-
-function ClipboardIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-    </svg>
-  )
-}
-
-
-function FrameIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="22" x2="2" y1="6" y2="6" />
-      <line x1="22" x2="2" y1="18" y2="18" />
-      <line x1="6" x2="6" y1="2" y2="22" />
-      <line x1="18" x2="18" y1="2" y2="22" />
-    </svg>
-  )
-}
-
-
-function SearchIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.3-4.3" />
-    </svg>
-  )
-}
-
-
-function TrophyIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
-  )
+  );
 }

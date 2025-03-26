@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 import ProfielSpinner from "../Spinner/ProfielSpinner"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     InputOTP,
     InputOTPGroup,
@@ -18,45 +18,71 @@ import axios from "axios"
 export function Login() {
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
-    const [isOtpsent, setIsOtpsent] = useState(false);
+    const [isOtpSent, setIsOtpSent] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const token = localStorage.getItem("dilmstoken");
+        if (token) {
+            router.push("/");
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const emailParam = urlParams.get('email');
+        if (emailParam) {
+            setEmail(emailParam);
+        }
+    }, [router]);
 
     const handleChange = (e) => {
         if (e.target.name === "email") {
             setEmail(e.target.value);
-        } else if (e.target.name === "otp") {
-            setOtp(e.target.value);
         }
     };
 
     const handleOtpSend = async (e) => {
         e.preventDefault();
-        if (email === "") {
-            toast.error("Please enter your email");
+        
+        // Validate email
+        if (!email || !email.includes('@')) {
+            toast.error("Please enter a valid email address");
             return;
         }
+        
         setLoading(true);
         try {
-            const data = await axios.post("/api/auth", { email: email.toLowerCase(), type: "send" });
+            const data = await axios.post("/api/auth", { 
+                email: email.toLowerCase(), 
+                type: "send" 
+            });
+            
             setLoading(false);
+            
             if (data.data.success) {
-                setIsOtpsent(true);
+                setIsOtpSent(true);
                 toast.success(data.data.message);
+                
+                // If this is a new user, we'll prompt them to register after OTP verification
+                if (data.data.isNewUser) {
+                    toast.info("You'll need to complete registration after verifying your email");
+                }
             } else {
                 toast.error(data.data.message);
             }
         } catch (err) {
             setLoading(false);
             toast.error("Something went wrong. Please try again later!");
+            console.error(err);
         }
     };
 
-    const hanldeVerifyOtp = async () => {
-        if (otp === "") {
-            toast.error("Please enter OTP");
+    const handleVerifyOtp = async () => {
+        if (!otp || otp.length !== 6) {
+            toast.error("Please enter a valid 6-digit OTP");
             return;
         }
+        
         setLoading(true);
         try {
             const data = await axios.post("/api/auth", {
@@ -64,21 +90,29 @@ export function Login() {
                 type: "verify",
                 otp: otp
             });
+            
             setLoading(false);
 
             if (data.data.success) {
+                // User exists and login successful
                 toast.success(data.data.message);
                 localStorage.setItem("dilmstoken", data.data.token);
-                router.push("/");
+                
+                // Small delay for toast to be visible before redirect
+                setTimeout(() => {
+                    router.push("/");
+                }, 1000);
             } else if (data.data.requiresRegistration) {
+                // User doesn't exist, redirect to registration
                 toast.info("Please complete your registration");
-                router.push(`/register?email=${encodeURIComponent(email)}`); // Fixed string interpolation
+                router.push(`/register?email=${encodeURIComponent(email)}&otp=${otp}`);
             } else {
                 toast.error(data.data.message);
             }
         } catch (err) {
             setLoading(false);
-            toast.error("Something went wrong. Please try again later!");
+            toast.error("Authentication failed. Please try again.");
+            console.error(err);
         }
     };
 
@@ -94,10 +128,10 @@ export function Login() {
                 <div className={`w-full max-w-md p-8 rounded-lg shadow-lg bg-gray-900 ${loading ? "opacity-30" : ""} transition-opacity duration-300`}>
                     <div className="text-center mb-6">
                         <h1 className="text-4xl font-bold text-pink-500">Welcome Back</h1>
-                        <p className="text-gray-400 mt-2">Login to access your account</p>
+                        <p className="text-gray-400 mt-2">Login to continue your learning journey</p>
                     </div>
                     <div className="space-y-6">
-                        {!isOtpsent && (
+                        {!isOtpSent && (
                             <div className="space-y-4">
                                 <div>
                                     <Label htmlFor="email" className="text-gray-300">Email</Label>
@@ -105,7 +139,7 @@ export function Login() {
                                         id="email"
                                         type="email"
                                         name="email"
-                                        placeholder="m@example.com"
+                                        placeholder="your@email.com"
                                         onChange={handleChange}
                                         value={email}
                                         required
@@ -121,13 +155,17 @@ export function Login() {
                                 </Button>
                             </div>
                         )}
-                        {isOtpsent && (
+                        {isOtpSent && (
                             <div className="space-y-4">
                                 <div>
-                                    <Label htmlFor="otp" className="text-gray-300">OTP (One Time Password)</Label>
-                                    <InputOTP maxLength={6} onChange={(value) => { setOtp(value); }}>
-                                        <InputOTPGroup className="flex justify-between mt-2">
-                                            {[...Array(6)].map((_, index) => (
+                                    <Label htmlFor="otp" className="text-gray-300">Enter the 6-digit OTP sent to your email</Label>
+                                    <InputOTP 
+                                        maxLength={6} 
+                                        onChange={(value) => { setOtp(value); }}
+                                        className="mt-2"
+                                    >
+                                        <InputOTPGroup className="flex justify-between gap-2">
+                                            {Array.from({ length: 6 }).map((_, index) => (
                                                 <InputOTPSlot
                                                     key={index}
                                                     index={index}
@@ -140,10 +178,21 @@ export function Login() {
                                 <Button
                                     type="submit"
                                     className="w-full bg-pink-600 hover:bg-pink-700 text-white py-2 rounded-lg transition-all duration-200"
-                                    onClick={hanldeVerifyOtp}
+                                    onClick={handleVerifyOtp}
                                 >
-                                    {loading ? "Verifying..." : "Login"}
+                                    {loading ? "Verifying..." : "Verify & Login"}
                                 </Button>
+                                <div className="text-center">
+                                    <button 
+                                        onClick={() => {
+                                            setIsOtpSent(false);
+                                            setOtp("");
+                                        }}
+                                        className="text-pink-400 hover:text-pink-300 text-sm"
+                                    >
+                                        Change email or resend OTP
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
